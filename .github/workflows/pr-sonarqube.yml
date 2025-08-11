@@ -57,7 +57,7 @@ jobs:
         continue-on-error: true
       - name: Check coverage threshold
         run: |
-          COVERAGE=$(grep -oP '"coverage":\s*\K[0-9.]+' target/sonar/report-task.txt || echo "0")
+          COVERAGE=$(grep -oP '"coverage":\s*\K[0-9.]+' JtProject/target/sonar/report-task.txt || echo "0")
           echo "Coverage: $COVERAGE%"
           if (( $(echo "$COVERAGE < 17.9" | bc -l) )); then
             echo "Code coverage $COVERAGE% is below threshold 17.9%. Failing pipeline."

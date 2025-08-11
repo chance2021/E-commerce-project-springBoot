@@ -47,7 +47,7 @@ jobs:
           PROJECT_KEY='chance2021_E-commerce-project-springBoot_5008c8df-636f-4e9d-ae35-162d8a032a5e'
           RESPONSE=$(curl -s -u $SONAR_TOKEN: "$SONAR_HOST_URL/api/measures/component?component=$PROJECT_KEY&metricKeys=coverage")
           echo "$RESPONSE"
-          COVERAGE=$(echo "$RESPONSE" | awk -F '"coverage":' '{if (NF>1) {split($2,a,"[,}"]"); print a[1]} else {print "0"}}')
+          COVERAGE=$(echo "$RESPONSE" | jq -r '.component.measures[] | select(.metric=="coverage") | .value')
           echo "SonarQube Coverage: $COVERAGE%"
           if (( $(echo "$COVERAGE < 17.9" | bc -l) )); then
             echo "Code coverage $COVERAGE% is below threshold 17.9%. Failing pipeline."

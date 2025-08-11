@@ -23,16 +23,7 @@ jobs:
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-m2-
-      - name: Wait for MySQL to be ready
-        run: |
-          for i in {1..30}; do
-            if mysql -h 127.0.0.1 -P 3306 -u root -proot -e "SELECT 1"; then
-              echo "MySQL is up!"
-              break
-            fi
-            echo "Waiting for MySQL..."
-            sleep 2
-          done
+
       - name: Run SonarQube Scan
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -55,7 +46,8 @@ jobs:
         run: |
           PROJECT_KEY='chance2021_E-commerce-project-springBoot_5008c8df-636f-4e9d-ae35-162d8a032a5e'
           RESPONSE=$(curl -s -u $SONAR_TOKEN: "$SONAR_HOST_URL/api/measures/component?component=$PROJECT_KEY&metricKeys=coverage")
-          COVERAGE=$(echo "$RESPONSE" | grep -oP '"coverage":\s*\K[0-9.]+' || echo "0")
+          echo "$RESPONSE"
+          COVERAGE=$(echo "$RESPONSE" | awk -F '"coverage":' '{if (NF>1) {split($2,a,"[,}"]"); print a[1]} else {print "0"}}')
           echo "SonarQube Coverage: $COVERAGE%"
           if (( $(echo "$COVERAGE < 17.9" | bc -l) )); then
             echo "Code coverage $COVERAGE% is below threshold 17.9%. Failing pipeline."

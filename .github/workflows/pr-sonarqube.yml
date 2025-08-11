@@ -55,10 +55,18 @@ jobs:
             -Dsonar.host.url=$SONAR_HOST_URL \
             -Dsonar.login=$SONAR_TOKEN
         continue-on-error: true
-      - name: Check coverage threshold
+      - name: Wait for SonarQube analysis to complete
         run: |
-          COVERAGE=$(grep -oP '"coverage":\s*\K[0-9.]+' JtProject/target/sonar/report-task.txt || echo "0")
-          echo "Coverage: $COVERAGE%"
+          sleep 20
+      - name: Check coverage threshold from SonarQube API
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        run: |
+          PROJECT_KEY='chance2021_E-commerce-project-springBoot_5008c8df-636f-4e9d-ae35-162d8a032a5e'
+          RESPONSE=$(curl -s -u $SONAR_TOKEN: "$SONAR_HOST_URL/api/measures/component?component=$PROJECT_KEY&metricKeys=coverage")
+          COVERAGE=$(echo "$RESPONSE" | grep -oP '"coverage":\s*\K[0-9.]+' || echo "0")
+          echo "SonarQube Coverage: $COVERAGE%"
           if (( $(echo "$COVERAGE < 17.9" | bc -l) )); then
             echo "Code coverage $COVERAGE% is below threshold 17.9%. Failing pipeline."
             exit 1

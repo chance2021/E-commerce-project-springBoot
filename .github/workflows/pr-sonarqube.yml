@@ -1,0 +1,55 @@
+name: PR SonarQube Scan
+
+on:
+  pull_request:
+    branches:
+      - master2
+
+jobs:
+  sonarqube:
+    runs-on: macOS
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      - name: Cache Maven packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-m2-
+
+      - name: Run SonarQube Scan
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        run: |
+          cd JtProject
+          mvn clean verify sonar:sonar \
+            -Dsonar.projectKey='chance2021_E-commerce-project-springBoot_5008c8df-636f-4e9d-ae35-162d8a032a5e' \
+            -Dsonar.projectName='E-commerce-project-springBoot' \
+            -Dsonar.host.url=$SONAR_HOST_URL \
+            -Dsonar.login=$SONAR_TOKEN
+        continue-on-error: true
+      - name: Wait for SonarQube analysis to complete
+        run: |
+          sleep 20
+      - name: Check coverage threshold from SonarQube API
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        run: |
+          PROJECT_KEY='chance2021_E-commerce-project-springBoot_5008c8df-636f-4e9d-ae35-162d8a032a5e'
+          RESPONSE=$(curl -s -u $SONAR_TOKEN: "$SONAR_HOST_URL/api/measures/component?component=$PROJECT_KEY&metricKeys=coverage")
+          echo "$RESPONSE"
+          COVERAGE=$(echo "$RESPONSE" | jq -r '.component.measures[] | select(.metric=="coverage") | .value')
+          echo "SonarQube Coverage: $COVERAGE%"
+          if (( $(echo "$COVERAGE < 20" | bc -l) )); then
+            echo "Code coverage $COVERAGE% is below threshold 17.9%. Failing pipeline."
+            exit 1
+          fi

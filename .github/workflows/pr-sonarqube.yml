@@ -28,6 +28,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
         run: |
+          cd JtProject
           mvn clean verify sonar:sonar \
             -Dsonar.projectKey='chance2021_E-commerce-project-springBoot_5008c8df-636f-4e9d-ae35-162d8a032a5e' \
             -Dsonar.projectName='E-commerce-project-springBoot'

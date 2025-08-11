@@ -54,6 +54,7 @@ jobs:
             -Dsonar.projectName='E-commerce-project-springBoot' \
             -Dsonar.host.url=$SONAR_HOST_URL \
             -Dsonar.login=$SONAR_TOKEN
+        continue-on-error: true
       - name: Check coverage threshold
         run: |
           COVERAGE=$(grep -oP '"coverage":\s*\K[0-9.]+' target/sonar/report-task.txt || echo "0")

@@ -7,7 +7,7 @@ on:
 
 jobs:
   sonarqube:
-    runs-on: chance-mac
+    runs-on: macOS
     services:
       mysql:
         image: mysql:8.0
